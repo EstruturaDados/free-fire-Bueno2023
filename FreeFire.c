@@ -1,161 +1,307 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define MAX_ITENS 10
 
-// --- Definição da Struct ---
-// Estrutura 'Item' para representar os objetos na mochila.
+// --- Contadores Globais para Comparacao ---
+int comparacoes_sequencial = 0;
+int comparacoes_binaria = 0;
+
+// --- Estruturas de Dados ---
+
+// Estrutura para representar um Item
 struct Item {
     char nome[30];
     char tipo[20];
     int quantidade;
 };
 
-// --- Funções do Sistema ---
+// Estrutura para o No da Lista Encadeada
+struct No {
+    struct Item dados;
+    struct No* proximo;
+};
 
-// Funcao para inserir um novo item na mochila
-void inserirItem(struct Item mochila[], int* num_itens) {
+// --- Funcoes para a Mochila com Vetor ---
+
+void inserirVetor(struct Item mochila[], int* num_itens) {
     if (*num_itens >= MAX_ITENS) {
-        printf("\nMOCHILA CHEIA! Nao e possivel adicionar mais itens.\n");
+        printf("\nMochila cheia!\n");
         return;
     }
-
-    printf("\n--- CADASTRAR NOVO ITEM ---\n");
-    printf("Nome do item: ");
-    while (getchar() != '\n'); // Limpa o buffer de entrada
+    printf("\nNome do item: ");
+    while (getchar() != '\n');
     fgets(mochila[*num_itens].nome, 30, stdin);
     mochila[*num_itens].nome[strcspn(mochila[*num_itens].nome, "\n")] = '\0';
-
-    printf("Tipo (ex: arma, municao, cura): ");
+    printf("Tipo: ");
     fgets(mochila[*num_itens].tipo, 20, stdin);
     mochila[*num_itens].tipo[strcspn(mochila[*num_itens].tipo, "\n")] = '\0';
-    
     printf("Quantidade: ");
     scanf("%d", &mochila[*num_itens].quantidade);
-    
     (*num_itens)++;
-    printf("Item cadastrado com sucesso!\n");
+    printf("Item adicionado com sucesso!\n");
 }
 
-// Funcao para remover um item da mochila pelo nome
-void removerItem(struct Item mochila[], int* num_itens) {
-    char nome_busca[30];
+void removerVetor(struct Item mochila[], int* num_itens, char* nome) {
     int i, j;
-    
-    if (*num_itens == 0) {
-        printf("\nMOCHILA VAZIA! Nao ha itens para remover.\n");
-        return;
-    }
-    
-    printf("\n--- REMOVER ITEM ---\n");
-    printf("Digite o nome do item a ser removido: ");
-    while (getchar() != '\n');
-    fgets(nome_busca, 30, stdin);
-    nome_busca[strcspn(nome_busca, "\n")] = '\0';
-    
-    // Busca o item no vetor
     for (i = 0; i < *num_itens; i++) {
-        if (strcmp(mochila[i].nome, nome_busca) == 0) {
-            // Se o item for encontrado, remove e move os demais
+        if (strcmp(mochila[i].nome, nome) == 0) {
             for (j = i; j < (*num_itens) - 1; j++) {
                 mochila[j] = mochila[j+1];
             }
             (*num_itens)--;
-            printf("Item '%s' removido com sucesso!\n", nome_busca);
+            printf("Item '%s' removido.\n", nome);
             return;
         }
     }
-    
-    printf("Item '%s' nao encontrado na mochila.\n", nome_busca);
+    printf("Item '%s' nao encontrado.\n", nome);
 }
 
-// Funcao para buscar um item na mochila pelo nome
-void buscarItem(struct Item mochila[], int num_itens) {
-    char nome_busca[30];
-    int i;
-    
+void listarVetor(struct Item mochila[], int num_itens) {
     if (num_itens == 0) {
-        printf("\nMOCHILA VAZIA! Nao ha itens para buscar.\n");
+        printf("\nMochila vazia.\n");
         return;
     }
-    
-    printf("\n--- BUSCAR ITEM ---\n");
-    printf("Digite o nome do item a ser buscado: ");
-    while (getchar() != '\n');
-    fgets(nome_busca, 30, stdin);
-    nome_busca[strcspn(nome_busca, "\n")] = '\0';
-    
-    // Percorre o vetor para encontrar o item
-    for (i = 0; i < num_itens; i++) {
-        if (strcmp(mochila[i].nome, nome_busca) == 0) {
-            printf("\n--- ITEM ENCONTRADO ---\n");
-            printf("Nome: %s\n", mochila[i].nome);
-            printf("Tipo: %s\n", mochila[i].tipo);
-            printf("Quantidade: %d\n", mochila[i].quantidade);
+    printf("\n=== ITENS NA MOCHILA (Vetor) ===\n");
+    for (int i = 0; i < num_itens; i++) {
+        printf("Nome: %s, Tipo: %s, Qtd: %d\n", mochila[i].nome, mochila[i].tipo, mochila[i].quantidade);
+    }
+}
+
+void ordenarVetor(struct Item mochila[], int num_itens) {
+    int i, j;
+    struct Item temp;
+    for (i = 0; i < num_itens - 1; i++) {
+        for (j = 0; j < num_itens - i - 1; j++) {
+            if (strcmp(mochila[j].nome, mochila[j+1].nome) > 0) {
+                temp = mochila[j];
+                mochila[j] = mochila[j+1];
+                mochila[j+1] = temp;
+            }
+        }
+    }
+    printf("\nItens ordenados com sucesso!\n");
+}
+
+void buscarSequencialVetor(struct Item mochila[], int num_itens, char* nome) {
+    comparacoes_sequencial = 0;
+    for (int i = 0; i < num_itens; i++) {
+        comparacoes_sequencial++;
+        if (strcmp(mochila[i].nome, nome) == 0) {
+            printf("\nItem '%s' encontrado! Tipo: %s, Qtd: %d\n", mochila[i].nome, mochila[i].tipo, mochila[i].quantidade);
+            printf("Busca Sequencial: %d comparacoes.\n", comparacoes_sequencial);
             return;
         }
     }
-    
-    printf("Item '%s' nao encontrado na mochila.\n", nome_busca);
+    printf("\nItem '%s' nao encontrado.\n", nome);
+    printf("Busca Sequencial: %d comparacoes.\n", comparacoes_sequencial);
 }
 
-// Funcao para listar todos os itens na mochila
-void listarItens(struct Item mochila[], int num_itens) {
-    int i;
-    
-    printf("\n=== ITENS NA MOCHILA ===\n");
-    if (num_itens == 0) {
-        printf("A mochila esta vazia.\n");
-    } else {
-        for (i = 0; i < num_itens; i++) {
-            printf("-----------------------\n");
-            printf("Item %d:\n", i + 1);
-            printf("  Nome: %s\n", mochila[i].nome);
-            printf("  Tipo: %s\n", mochila[i].tipo);
-            printf("  Quantidade: %d\n", mochila[i].quantidade);
+void buscarBinariaVetor(struct Item mochila[], int num_itens, char* nome) {
+    comparacoes_binaria = 0;
+    int inicio = 0, fim = num_itens - 1, meio;
+    while (inicio <= fim) {
+        comparacoes_binaria++;
+        meio = inicio + (fim - inicio) / 2;
+        if (strcmp(mochila[meio].nome, nome) == 0) {
+            printf("\nItem '%s' encontrado! Tipo: %s, Qtd: %d\n", mochila[meio].nome, mochila[meio].tipo, mochila[meio].quantidade);
+            printf("Busca Binaria: %d comparacoes.\n", comparacoes_binaria);
+            return;
         }
-        printf("-----------------------\n");
+        if (strcmp(mochila[meio].nome, nome) < 0) {
+            inicio = meio + 1;
+        } else {
+            fim = meio - 1;
+        }
+    }
+    printf("\nItem '%s' nao encontrado.\n", nome);
+    printf("Busca Binaria: %d comparacoes.\n", comparacoes_binaria);
+}
+
+// --- Funcoes para a Mochila com Lista Encadeada ---
+
+struct No* inserirLista(struct No* head) {
+    struct No* novoNo = (struct No*)malloc(sizeof(struct No));
+    if (novoNo == NULL) {
+        printf("\nErro de alocacao de memoria.\n");
+        return head;
+    }
+    printf("\nNome do item: ");
+    while (getchar() != '\n');
+    fgets(novoNo->dados.nome, 30, stdin);
+    novoNo->dados.nome[strcspn(novoNo->dados.nome, "\n")] = '\0';
+    printf("Tipo: ");
+    fgets(novoNo->dados.tipo, 20, stdin);
+    novoNo->dados.tipo[strcspn(novoNo->dados.tipo, "\n")] = '\0';
+    printf("Quantidade: ");
+    scanf("%d", &novoNo->dados.quantidade);
+    
+    novoNo->proximo = head;
+    printf("Item adicionado com sucesso!\n");
+    return novoNo;
+}
+
+struct No* removerLista(struct No* head, char* nome) {
+    struct No* temp = head, *anterior = NULL;
+    while (temp != NULL && strcmp(temp->dados.nome, nome) != 0) {
+        anterior = temp;
+        temp = temp->proximo;
+    }
+    if (temp == NULL) {
+        printf("Item '%s' nao encontrado.\n", nome);
+        return head;
+    }
+    if (anterior == NULL) {
+        head = temp->proximo;
+    } else {
+        anterior->proximo = temp->proximo;
+    }
+    free(temp);
+    printf("Item '%s' removido.\n", nome);
+    return head;
+}
+
+void listarLista(struct No* head) {
+    if (head == NULL) {
+        printf("\nMochila vazia.\n");
+        return;
+    }
+    printf("\n=== ITENS NA MOCHILA (Lista Encadeada) ===\n");
+    struct No* temp = head;
+    while (temp != NULL) {
+        printf("Nome: %s, Tipo: %s, Qtd: %d\n", temp->dados.nome, temp->dados.tipo, temp->dados.quantidade);
+        temp = temp->proximo;
     }
 }
 
-// --- Funcao Principal (Fluxo do Programa) ---
-int main() {
-    struct Item mochila[MAX_ITENS];
-    int num_itens = 0;
-    int opcao;
+void buscarLista(struct No* head, char* nome) {
+    comparacoes_sequencial = 0;
+    struct No* temp = head;
+    while (temp != NULL) {
+        comparacoes_sequencial++;
+        if (strcmp(temp->dados.nome, nome) == 0) {
+            printf("\nItem '%s' encontrado! Tipo: %s, Qtd: %d\n", temp->dados.nome, temp->dados.tipo, temp->dados.quantidade);
+            printf("Busca Sequencial: %d comparacoes.\n", comparacoes_sequencial);
+            return;
+        }
+        temp = temp->proximo;
+    }
+    printf("\nItem '%s' nao encontrado.\n", nome);
+    printf("Busca Sequencial: %d comparacoes.\n", comparacoes_sequencial);
+}
+
+// --- Funcao Principal e Menus ---
+
+void menuVetor() {
+    struct Item mochila_vetor[MAX_ITENS];
+    int num_itens_vetor = 0;
+    int opcao_vetor;
+    char nome[30];
 
     do {
-        // Menu principal para o usuario
-        printf("\n--- MENU DA MOCHILA ---\n");
-        printf("1. Cadastrar novo item\n");
+        printf("\n--- MENU VETOR ---\n");
+        printf("1. Inserir item\n");
         printf("2. Remover item\n");
-        printf("3. Buscar item\n");
-        printf("4. Listar todos os itens\n");
-        printf("0. Sair\n");
+        printf("3. Listar todos os itens\n");
+        printf("4. Buscar item (Sequencial)\n");
+        printf("5. Ordenar itens\n");
+        printf("6. Buscar item (Binaria)\n");
+        printf("0. Voltar ao menu principal\n");
         printf("Escolha uma opcao: ");
-        scanf("%d", &opcao);
+        scanf("%d", &opcao_vetor);
 
-        switch (opcao) {
-            case 1:
-                inserirItem(mochila, &num_itens);
-                break;
+        switch (opcao_vetor) {
+            case 1: inserirVetor(mochila_vetor, &num_itens_vetor); break;
             case 2:
-                removerItem(mochila, &num_itens);
+                printf("Nome do item a remover: ");
+                while (getchar() != '\n');
+                fgets(nome, 30, stdin);
+                nome[strcspn(nome, "\n")] = '\0';
+                removerVetor(mochila_vetor, &num_itens_vetor, nome);
                 break;
-            case 3:
-                buscarItem(mochila, num_itens);
-                break;
+            case 3: listarVetor(mochila_vetor, num_itens_vetor); break;
             case 4:
-                listarItens(mochila, num_itens);
+                printf("Nome do item a buscar: ");
+                while (getchar() != '\n');
+                fgets(nome, 30, stdin);
+                nome[strcspn(nome, "\n")] = '\0';
+                buscarSequencialVetor(mochila_vetor, num_itens_vetor, nome);
                 break;
-            case 0:
-                printf("\nSaindo do sistema. Ate mais!\n");
-                break;
-            default:
-                printf("\nOpcao invalida. Por favor, tente novamente.\n");
+            case 5: ordenarVetor(mochila_vetor, num_itens_vetor); break;
+            case 6:
+                printf("Nome do item a buscar (Lembre-se: os itens devem estar ordenados): ");
+                while (getchar() != '\n');
+                fgets(nome, 30, stdin);
+                nome[strcspn(nome, "\n")] = '\0';
+                buscarBinariaVetor(mochila_vetor, num_itens_vetor, nome);
                 break;
         }
-    } while (opcao != 0);
+    } while (opcao_vetor != 0);
+}
+
+void menuLista() {
+    struct No* mochila_lista = NULL;
+    int opcao_lista;
+    char nome[30];
+
+    do {
+        printf("\n--- MENU LISTA ENCADEDADA ---\n");
+        printf("1. Inserir item\n");
+        printf("2. Remover item\n");
+        printf("3. Listar todos os itens\n");
+        printf("4. Buscar item\n");
+        printf("0. Voltar ao menu principal\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao_lista);
+
+        switch (opcao_lista) {
+            case 1: mochila_lista = inserirLista(mochila_lista); break;
+            case 2:
+                printf("Nome do item a remover: ");
+                while (getchar() != '\n');
+                fgets(nome, 30, stdin);
+                nome[strcspn(nome, "\n")] = '\0';
+                mochila_lista = removerLista(mochila_lista, nome);
+                break;
+            case 3: listarLista(mochila_lista); break;
+            case 4:
+                printf("Nome do item a buscar: ");
+                while (getchar() != '\n');
+                fgets(nome, 30, stdin);
+                nome[strcspn(nome, "\n")] = '\0';
+                buscarLista(mochila_lista, nome);
+                break;
+        }
+    } while (opcao_lista != 0);
+
+    // Liberar memoria da lista ao sair
+    struct No* temp;
+    while(mochila_lista != NULL) {
+        temp = mochila_lista;
+        mochila_lista = mochila_lista->proximo;
+        free(temp);
+    }
+}
+
+int main() {
+    int opcao_principal;
+
+    do {
+        printf("\n=== ESCOLHA A ESTRUTURA DE DADOS ===\n");
+        printf("1. Mochila com Vetor\n");
+        printf("2. Mochila com Lista Encadeada\n");
+        printf("0. Sair do programa\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao_principal);
+
+        switch (opcao_principal) {
+            case 1: menuVetor(); break;
+            case 2: menuLista(); break;
+            case 0: printf("\nSaindo. Ate logo!\n"); break;
+            default: printf("Opcao invalida. Tente novamente.\n"); break;
+        }
+    } while (opcao_principal != 0);
 
     return 0;
 }
